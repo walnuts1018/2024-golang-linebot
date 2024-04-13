@@ -58,8 +58,9 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 							); err != nil {
 								slog.Error(fmt.Sprintf("Failed to reply message: %v", err))
 								c.JSON(500, gin.H{"error": "Failed to reply message"})
-								return
 							}
+
+							return
 						}
 
 						if _, err := api.ReplyMessage(
