@@ -15,7 +15,7 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	r := gin.Default()
-	api, err := messaging_api.NewMessagingApiAPI(cfg.LineChannelSecret)
+	api, err := messaging_api.NewMessagingApiAPI(cfg.LineChannelToken)
 	if err != nil {
 		return nil, err
 	}
@@ -26,14 +26,14 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 			c.String(200, "OK")
 		})
 		proxy.POST("/callback", func(c *gin.Context) {
-			callback, err := webhook.ParseRequest(cfg.LineChannelSecret, c.Request)
+			req, err := webhook.ParseRequest(cfg.LineChannelSecret, c.Request)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Failed to parse request: %v", err))
 				c.JSON(500, gin.H{"error": "Failed to parse request"})
 				return
 			}
 
-			for _, event := range callback.Events {
+			for _, event := range req.Events {
 				slog.Info(fmt.Sprintf("Event: %v", event))
 
 				switch e := event.(type) {

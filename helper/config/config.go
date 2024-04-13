@@ -13,6 +13,7 @@ import (
 type Config struct {
 	ServerPort        string `env:"SERVER_PORT" envDefault:"8080"`
 	LineChannelSecret string `env:"LINE_CHANNEL_SECRET,required"`
+	LineChannelToken  string `env:"LINE_CHANNEL_TOKEN,required"`
 
 	LogLevelString string     `env:"LOG_LEVEL" envDefault:"info"`
 	LogLevel       slog.Level // Parse from LogLevelString
