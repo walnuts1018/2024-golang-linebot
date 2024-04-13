@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var regex = regexp.MustCompile(`^(?P<weekday>[月火水木金土日])?(?P<period>\d) (?P<name>.+) (?P<room>.+)$`)
+var regex = regexp.MustCompile(`^(?P<weekday>[月火水木金土日])?(?P<period>\d)\s(?P<name>.+)\s(?P<room>.+)$`)
 
 func ParseFromString(s string) (Subject, error) {
 	params := regex.FindStringSubmatch(s)
