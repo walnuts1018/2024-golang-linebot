@@ -14,7 +14,7 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 	if cfg.LogLevel != slog.LevelDebug {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	r := gin.New()
+	r := gin.Default()
 	r.GET("/healthz", func(c *gin.Context) {
 		c.String(200, "OK")
 	})
