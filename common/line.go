@@ -56,9 +56,33 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 						}
 
 						slog.Info(fmt.Sprintf("Replied message: %v", message.Text))
+					case webhook.StickerMessageContent:
+						replyMessage := fmt.Sprintf("Sticker ID: %s, Sticker Resource Type: %s", message.StickerId, message.StickerResourceType)
+						if _, err := api.ReplyMessage(
+							&messaging_api.ReplyMessageRequest{
+								ReplyToken: e.ReplyToken,
+								Messages: []messaging_api.MessageInterface{
+									messaging_api.TextMessage{
+										Text: replyMessage,
+									},
+								},
+							},
+						); err != nil {
+							slog.Error(fmt.Sprintf("Failed to reply message: %v", err))
+							c.JSON(500, gin.H{"error": "Failed to reply message"})
+							return
+						}
+
+						slog.Info(fmt.Sprintf("Replied message: %v", replyMessage))
+
+					default:
+						slog.Info(fmt.Sprintf("Message type: %T", message))
 					}
 
+				default:
+					slog.Info(fmt.Sprintf("Event type: %T", e))
 				}
+
 			}
 
 			c.JSON(200, gin.H{"message": "OK"})
