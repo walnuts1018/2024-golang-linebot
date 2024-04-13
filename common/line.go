@@ -40,12 +40,34 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 				case webhook.MessageEvent:
 					switch message := e.Message.(type) {
 					case webhook.TextMessageContent:
+						// 受け取ったメッセージから授業を正しい形式で取り出す
+						subject, err := ParseFromString(message.Text)
+
+						// エラーが発生した場合はエラーメッセージを返信する
+						if err != nil {
+							slog.Error(fmt.Sprintf("Failed to parse subject: %v", err))
+							if _, err := api.ReplyMessage(
+								&messaging_api.ReplyMessageRequest{
+									ReplyToken: e.ReplyToken,
+									Messages: []messaging_api.MessageInterface{
+										messaging_api.TextMessage{
+											Text: fmt.Sprintf("授業の抽出に失敗しました: %v", err),
+										},
+									},
+								},
+							); err != nil {
+								slog.Error(fmt.Sprintf("Failed to reply message: %v", err))
+								c.JSON(500, gin.H{"error": "Failed to reply message"})
+								return
+							}
+						}
+
 						if _, err := api.ReplyMessage(
 							&messaging_api.ReplyMessageRequest{
 								ReplyToken: e.ReplyToken,
 								Messages: []messaging_api.MessageInterface{
 									messaging_api.TextMessage{
-										Text: message.Text,
+										Text: subject.String(),
 									},
 								},
 							},
