@@ -37,9 +37,9 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 				slog.Info(fmt.Sprintf("Event: %v", event))
 
 				switch e := event.(type) {
-				case *webhook.MessageEvent:
+				case webhook.MessageEvent:
 					switch message := e.Message.(type) {
-					case *webhook.TextMessageContent:
+					case webhook.TextMessageContent:
 						if _, err := api.ReplyMessage(
 							&messaging_api.ReplyMessageRequest{
 								ReplyToken: e.ReplyToken,
