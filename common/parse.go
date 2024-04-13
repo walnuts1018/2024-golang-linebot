@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -16,21 +17,25 @@ func ParseFromString(s string) (Subject, error) {
 	}
 
 	weekday := params[regex.SubexpIndex("weekday")]
-	period := params[regex.SubexpIndex("period")]
 	name := params[regex.SubexpIndex("name")]
 	room := params[regex.SubexpIndex("room")]
+
+	period, err := strconv.Atoi(params[regex.SubexpIndex("period")])
+	if err != nil {
+		return Subject{}, fmt.Errorf("時間の取得に失敗しました: %v", err)
+	}
 
 	return Subject{
 		Name:    name,
 		Weekday: parseWeekday(weekday),
-		Period:  parsePeriod(period),
+		Period:  period,
 		Room:    room,
 	}, nil
 
 }
 
 func (s Subject) String() string {
-	return fmt.Sprintf("%s曜日%d限\n教室: %s\n授業名: %s", s.Weekday, s.Period, s.Room, s.Name)
+	return fmt.Sprintf("%s曜日%d限\n教室: %s\n授業名: %s", WeekToString(s.Weekday), s.Period, s.Room, s.Name)
 }
 
 func parseWeekday(s string) time.Weekday {
@@ -50,25 +55,27 @@ func parseWeekday(s string) time.Weekday {
 	case "日":
 		return time.Sunday
 	default:
-		return time.Monday
+		return -1
 	}
 }
 
-func parsePeriod(s string) int {
-	switch s {
-	case "1":
-		return 1
-	case "2":
-		return 2
-	case "3":
-		return 3
-	case "4":
-		return 4
-	case "5":
-		return 5
-	case "6":
-		return 6
+func WeekToString(w time.Weekday) string {
+	switch w {
+	case time.Monday:
+		return "月"
+	case time.Tuesday:
+		return "火"
+	case time.Wednesday:
+		return "水"
+	case time.Thursday:
+		return "木"
+	case time.Friday:
+		return "金"
+	case time.Saturday:
+		return "土"
+	case time.Sunday:
+		return "日"
 	default:
-		return 1
+		return ""
 	}
 }
