@@ -14,8 +14,8 @@ type Config struct {
 	ServerPort        string `env:"SERVER_PORT" envDefault:"8080"`
 	LineChannelSecret string `env:"LINE_CHANNEL_SECRET,required"`
 
-	logLevelString string     `env:"LOG_LEVEL" envDefault:"info"`
-	LogLevel       slog.Level // Parse from logLevelString
+	LogLevelString string     `env:"LOG_LEVEL" envDefault:"info"`
+	LogLevel       slog.Level // Parse from LogLevelString
 
 	PSQLDSN      string `env:"PSQL_DSN" envDefault:""` // If PSQL_DSN is set, other PSQL_* variables will be ignored
 	PSQLHost     string `env:"PSQL_HOST" envDefault:"localhost"`
@@ -42,7 +42,7 @@ func Load() (Config, error) {
 		return cfg, err
 	}
 
-	cfg.LogLevel = parseLogLevel(cfg.logLevelString)
+	cfg.LogLevel = parseLogLevel(cfg.LogLevelString)
 	cfg = makePSQLDSN(cfg)
 
 	return cfg, nil
