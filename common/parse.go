@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-var regex = regexp.MustCompile(`^(?P<weekday>[月火水木金土日])?(?P<period>\d)\s(?P<name>.+)\s(?P<room>.+)$`)
+var regex = regexp.MustCompile(`^(?P<weekday>[月火水木金土日])(?P<period>\d)\s(?P<name>.+)\s(?P<room>.+)\s?$`)
 
 func ParseFromString(s string) (Subject, error) {
 	params := regex.FindStringSubmatch(s)
 
-	if len(params) != regex.NumSubexp() {
+	if len(params) != regex.NumSubexp()+1 {
 		return Subject{}, fmt.Errorf("形式が間違っています。「月1 パワーエレクトロニクス 電総大」などと入力してください")
 	}
 
