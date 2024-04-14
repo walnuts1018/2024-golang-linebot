@@ -1,3 +1,4 @@
+// このファイルには、科目の配列からカレンダーのメッセージを生成する関数が書かれています。
 package common
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 )
 
+// CreateCalenderJson は、科目の配列からカレンダーのメッセージを生成します。
 func CreateCalenderJson(subjects []Subject) (*messaging_api.FlexMessage, error) {
 
 	Frames := make([]messaging_api.FlexComponentInterface, 5)
