@@ -20,5 +20,8 @@
 # Go workspace file
 go.work
 
-.env
 tmp
+
+# 講座参加者が.envをpushする心配はないので分かりやすさのために.envも含める
+# .env
+.env.secret
