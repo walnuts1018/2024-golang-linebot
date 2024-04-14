@@ -109,7 +109,7 @@ type FileDB struct {
 
 func NewFileDB(path string) (Storage, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	file, err := os.Open(path)
@@ -128,7 +128,7 @@ func NewFileDB(path string) (Storage, error) {
 	var subjects []Subject
 	dec := json.NewDecoder(file)
 	if err := dec.Decode(&subjects); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode subjects: %w", err)
 	}
 
 	return &FileDB{
