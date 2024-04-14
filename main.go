@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/lmittmann/tint"
+	"github.com/robfig/cron/v3"
 	"github.com/walnuts1018/2024-golang-linebot/common"
 	"github.com/walnuts1018/2024-golang-linebot/common/config"
 )
@@ -30,8 +31,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := router.Run(fmt.Sprintf(":%s", cfg.ServerPort)); err != nil {
-		slog.Error(fmt.Sprintf("Failed to run router: %v", err))
-		os.Exit(1)
-	}
+	// サーバー起動
+	go func() {
+		if err := router.Run(fmt.Sprintf(":%s", cfg.ServerPort)); err != nil {
+			slog.Error(fmt.Sprintf("Failed to run router: %v", err))
+			os.Exit(1)
+		}
+	}()
+
+	c := cron.New()
+	// 毎朝7時に実行
+	c.AddFunc("0 7 * * *", func() {
+		slog.Info("7時になりました")
+	})
+
+	c.Run()
 }
