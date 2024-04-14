@@ -152,24 +152,7 @@ func (f *FileDB) AddSubject(subject Subject) error {
 
 	file, err := os.Create(f.path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			file, err := os.Create(f.path)
-			if err != nil {
-				return fmt.Errorf("failed to create file: %w", err)
-			}
-			defer file.Close()
-
-			subjects := append(f.subjects, subject)
-			enc := json.NewEncoder(file)
-			if err := enc.Encode(subjects); err != nil {
-				return fmt.Errorf("failed to encode subjects: %w", err)
-			}
-
-			f.subjects = subjects
-			return nil
-		} else {
-			return fmt.Errorf("failed to open file: %w", err)
-		}
+		return fmt.Errorf("failed to create file: %w", err)
 	}
 	defer file.Close()
 
