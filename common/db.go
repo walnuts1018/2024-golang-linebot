@@ -150,7 +150,7 @@ func NewFileDB(path string) (Storage, error) {
 
 func (f *FileDB) AddSubject(subject Subject) error {
 
-	file, err := os.Open(f.path)
+	file, err := os.Create(f.path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			file, err := os.Create(f.path)
