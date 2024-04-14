@@ -52,7 +52,7 @@ func CreateCalenderJson(subjects []Subject) (*messaging_api.FlexMessage, error) 
 			continue
 		}
 
-		frames, ok := Frames[subject.Period].(*messaging_api.FlexBox)
+		frames, ok := Frames[subject.Period-1].(*messaging_api.FlexBox)
 		if !ok {
 			slog.Error(fmt.Sprintf("Invalid frame: %v", Frames[subject.Period-1]))
 			continue
