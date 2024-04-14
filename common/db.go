@@ -1,6 +1,9 @@
 package common
 
 import (
+	"encoding/json"
+	"os"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/walnuts1018/2024-golang-linebot/common/config"
 
@@ -95,4 +98,54 @@ func (i *InmemoryDB) AddSubject(subject Subject) error {
 
 func (i *InmemoryDB) GetSubjects() ([]Subject, error) {
 	return i.subjects, nil
+}
+
+type FileDB struct {
+	path string
+}
+
+func NewFileDB(path string) Storage {
+	return &FileDB{
+		path: path,
+	}
+}
+
+func (f *FileDB) AddSubject(subject Subject) error {
+	file, err := os.Create(f.path)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	subjects, err := f.GetSubjects()
+	if err != nil {
+		return err
+	}
+
+	subjects = append(subjects, subject)
+
+	enc := json.NewEncoder(file)
+	if err := enc.Encode(subjects); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *FileDB) GetSubjects() ([]Subject, error) {
+	file, err := os.Open(f.path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	var subjects []Subject
+	dec := json.NewDecoder(file)
+	if err := dec.Decode(&subjects); err != nil {
+		return nil, err
+	}
+
+	return subjects, nil
 }
