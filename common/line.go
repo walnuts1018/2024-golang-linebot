@@ -78,8 +78,15 @@ func addSubject(c *gin.Context, message webhook.TextMessageContent, api *messagi
 		return
 	}
 
+	userID, err := getUserID(e)
+	if err != nil {
+		slog.Error("Failed to get user id")
+		sendMessage(c, "ユーザーIDの取得に失敗しました", api, e)
+		return
+	}
+
 	// エラーが発生せず、授業が正しく取り出せた場合は、保存しておく
-	if err := dbClient.AddSubject(subject); err != nil {
+	if err := dbClient.AddSubject(subject, userID); err != nil {
 		slog.Error(fmt.Sprintf("Failed to parse subject: %v", err))
 		sendMessage(c, fmt.Sprintf("授業の保存に失敗しました: %v", err), api, e)
 		// 終了
@@ -93,8 +100,14 @@ func addSubject(c *gin.Context, message webhook.TextMessageContent, api *messagi
 }
 
 func showCalendar(c *gin.Context, api *messaging_api.MessagingApiAPI, e webhook.MessageEvent, dbClient Storage) {
+	userID, err := getUserID(e)
+	if err != nil {
+		slog.Error("Failed to get user id")
+		sendMessage(c, "ユーザーIDの取得に失敗しました", api, e)
+		return
+	}
 
-	subjects, err := dbClient.GetSubjects()
+	subjects, err := dbClient.GetSubjects(userID)
 	if err != nil {
 		slog.Error(fmt.Sprintf("Failed to get subjects: %v", err))
 		sendMessage(c, fmt.Sprintf("授業の取得に失敗しました: %v", err), api, e)
@@ -141,4 +154,12 @@ func sendMessage(c *gin.Context, text string, api *messaging_api.MessagingApiAPI
 	}
 
 	slog.Info(fmt.Sprintf("Replied message: %v", text))
+}
+
+func getUserID(e webhook.MessageEvent) (string, error) {
+	userSource, ok := e.Source.(webhook.UserSource)
+	if !ok {
+		return "", fmt.Errorf("failed to get user id")
+	}
+	return userSource.UserId, nil
 }

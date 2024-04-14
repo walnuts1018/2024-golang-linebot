@@ -13,8 +13,8 @@ import (
 )
 
 type Storage interface {
-	AddSubject(subject Subject) error
-	GetSubjects() ([]Subject, error)
+	AddSubject(subject Subject, userid string) error
+	GetSubjects(userid string) ([]Subject, error)
 }
 
 type DBClient struct {
@@ -56,17 +56,17 @@ func (c *DBClient) Init() error {
 }
 
 func (c *DBClient) CreateSubjectTable() error {
-	_, err := c.db.Exec("CREATE TABLE IF NOT EXISTS subjects (id SERIAL PRIMARY KEY, name TEXT, weekday TEXT, period INTEGER, room TEXT)")
+	_, err := c.db.Exec("CREATE TABLE IF NOT EXISTS subjects (id SERIAL PRIMARY KEY, user_id TEXT PRIMARY KEY, name TEXT, weekday TEXT, period INTEGER, room TEXT)")
 	return err
 }
 
-func (c *DBClient) AddSubject(subject Subject) error {
-	_, err := c.db.Exec("INSERT INTO subjects (name, weekday, period, room) VALUES ($1, $2, $3, $4)", subject.Name, subject.Weekday, subject.Period, subject.Room)
+func (c *DBClient) AddSubject(subject Subject, userid string) error {
+	_, err := c.db.Exec("INSERT INTO subjects (user_id, name, weekday, period, room) VALUES ($1, $2, $3, $4, $5)", userid, subject.Name, subject.Weekday, subject.Period, subject.Room)
 	return err
 }
 
-func (c *DBClient) GetSubjects() ([]Subject, error) {
-	rows, err := c.db.Queryx("SELECT * FROM subjects")
+func (c *DBClient) GetSubjects(userid string) ([]Subject, error) {
+	rows, err := c.db.Queryx("SELECT * FROM subjects WHERE user_id = $1", userid)
 	if err != nil {
 		return nil, err
 	}
@@ -84,26 +84,36 @@ func (c *DBClient) GetSubjects() ([]Subject, error) {
 }
 
 type InmemoryDB struct {
-	subjects []Subject
+	subjects map[string][]Subject // key: userid
 }
 
 func NewInmemoryDB() Storage {
 	return &InmemoryDB{
-		subjects: make([]Subject, 0),
+		subjects: make(map[string][]Subject),
 	}
 }
 
-func (i *InmemoryDB) AddSubject(subject Subject) error {
-	i.subjects = append(i.subjects, subject)
+func (i *InmemoryDB) AddSubject(subject Subject, userid string) error {
+	if _, ok := i.subjects[userid]; !ok {
+		i.subjects[userid] = []Subject{}
+	}
+
+	i.subjects[userid] = append(i.subjects[userid], subject)
+
 	return nil
+
 }
 
-func (i *InmemoryDB) GetSubjects() ([]Subject, error) {
-	return i.subjects, nil
+func (i *InmemoryDB) GetSubjects(userid string) ([]Subject, error) {
+	if _, ok := i.subjects[userid]; !ok {
+		return []Subject{}, nil
+	}
+
+	return i.subjects[userid], nil
 }
 
 type FileDB struct {
-	subjects []Subject
+	subjects map[string][]Subject // key: userid
 	path     string
 }
 
@@ -128,7 +138,7 @@ func NewFileDB(path string) (Storage, error) {
 
 			return &FileDB{
 				path:     path,
-				subjects: make([]Subject, 0),
+				subjects: make(map[string][]Subject),
 			}, nil
 		} else {
 			return nil, fmt.Errorf("failed to open file: %w", err)
@@ -136,7 +146,7 @@ func NewFileDB(path string) (Storage, error) {
 	}
 	defer file.Close()
 
-	var subjects []Subject
+	var subjects map[string][]Subject
 	dec := json.NewDecoder(file)
 	if err := dec.Decode(&subjects); err != nil {
 		return nil, fmt.Errorf("failed to decode subjects: %w", err)
@@ -148,7 +158,7 @@ func NewFileDB(path string) (Storage, error) {
 	}, nil
 }
 
-func (f *FileDB) AddSubject(subject Subject) error {
+func (f *FileDB) AddSubject(subject Subject, userid string) error {
 
 	file, err := os.Create(f.path)
 	if err != nil {
@@ -156,18 +166,26 @@ func (f *FileDB) AddSubject(subject Subject) error {
 	}
 	defer file.Close()
 
-	subjects := append(f.subjects, subject)
+	if _, ok := f.subjects[userid]; !ok {
+		f.subjects[userid] = []Subject{}
+	}
+
+	subjects := append(f.subjects[userid], subject)
 
 	enc := json.NewEncoder(file)
 	if err := enc.Encode(subjects); err != nil {
 		return fmt.Errorf("failed to encode subjects: %w", err)
 	}
 
-	f.subjects = subjects
+	f.subjects[userid] = subjects
 
 	return nil
 }
 
-func (f *FileDB) GetSubjects() ([]Subject, error) {
-	return f.subjects, nil
+func (f *FileDB) GetSubjects(userid string) ([]Subject, error) {
+	if _, ok := f.subjects[userid]; !ok {
+		return []Subject{}, nil
+	}
+
+	return f.subjects[userid], nil
 }
