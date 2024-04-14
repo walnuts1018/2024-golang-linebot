@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/walnuts1018/2024-golang-linebot/common/config"
@@ -104,13 +105,26 @@ type FileDB struct {
 	path string
 }
 
-func NewFileDB(path string) Storage {
-	return &FileDB{
-		path: path,
+func NewFileDB(path string) (Storage, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return nil, err
 	}
+
+	file, err := os.Create(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := file.Close(); err != nil {
+		return nil, err
+	}
+
+	return FileDB{
+		path: path,
+	}, nil
 }
 
-func (f *FileDB) AddSubject(subject Subject) error {
+func (f FileDB) AddSubject(subject Subject) error {
 	file, err := os.Create(f.path)
 	if err != nil {
 		return err
@@ -133,7 +147,7 @@ func (f *FileDB) AddSubject(subject Subject) error {
 	return nil
 }
 
-func (f *FileDB) GetSubjects() ([]Subject, error) {
+func (f FileDB) GetSubjects() ([]Subject, error) {
 	file, err := os.Open(f.path)
 	if err != nil {
 		return nil, err

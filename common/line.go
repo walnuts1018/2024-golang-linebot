@@ -26,7 +26,10 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 	// 	return nil, err
 	// }
 
-	dbClient := NewFileDB("./tmp/db.json")
+	dbClient, err := NewFileDB("./tmp/db.json")
+	if err != nil {
+		return nil, err
+	}
 
 	proxy := r.Group("/proxy/8080")
 	{
