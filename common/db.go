@@ -119,6 +119,13 @@ func NewFileDB(path string) (Storage, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to create file: %w", err)
 			}
+			_, err = file.Write([]byte("[]"))
+			if err != nil {
+				return nil, fmt.Errorf("failed to write file: %w", err)
+			}
+			if err := file.Sync(); err != nil {
+				return nil, fmt.Errorf("failed to sync file: %w", err)
+			}
 		} else {
 			return nil, fmt.Errorf("failed to open file: %w", err)
 		}
@@ -141,7 +148,18 @@ func (f *FileDB) AddSubject(subject Subject) error {
 
 	file, err := os.Create(f.path)
 	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
+		if os.IsNotExist(err) {
+			file, err = os.Create(f.path)
+			if err != nil {
+				return fmt.Errorf("failed to create file: %w", err)
+			}
+			_, err = file.Write([]byte("[]"))
+			if err != nil {
+				return fmt.Errorf("failed to write file: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to open file: %w", err)
+		}
 	}
 	defer file.Close()
 
