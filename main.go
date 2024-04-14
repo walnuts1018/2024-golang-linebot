@@ -8,7 +8,7 @@ import (
 
 	"github.com/lmittmann/tint"
 	"github.com/walnuts1018/2024-golang-linebot/common"
-	"github.com/walnuts1018/2024-golang-linebot/helper/config"
+	"github.com/walnuts1018/2024-golang-linebot/common/config"
 )
 
 func main() {

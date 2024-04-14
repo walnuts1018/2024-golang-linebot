@@ -5,7 +5,9 @@ go 1.22.2
 require (
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
+	github.com/lib/pq v1.10.9
 	github.com/line/line-bot-sdk-go/v8 v8.5.0
 	github.com/lmittmann/tint v1.0.4
 )
