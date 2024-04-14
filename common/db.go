@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -102,7 +103,8 @@ func (i *InmemoryDB) GetSubjects() ([]Subject, error) {
 }
 
 type FileDB struct {
-	path string
+	subjects []Subject
+	path     string
 }
 
 func NewFileDB(path string) (Storage, error) {
@@ -110,49 +112,17 @@ func NewFileDB(path string) (Storage, error) {
 		return nil, err
 	}
 
-	file, err := os.Create(path)
+	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			file, err = os.Create(path)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create file: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("failed to open file: %w", err)
+		}
 	}
-
-	if err := file.Close(); err != nil {
-		return nil, err
-	}
-
-	return FileDB{
-		path: path,
-	}, nil
-}
-
-func (f FileDB) AddSubject(subject Subject) error {
-	file, err := os.Create(f.path)
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	subjects, err := f.GetSubjects()
-	if err != nil {
-		return err
-	}
-
-	subjects = append(subjects, subject)
-
-	enc := json.NewEncoder(file)
-	if err := enc.Encode(subjects); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (f FileDB) GetSubjects() ([]Subject, error) {
-	file, err := os.Open(f.path)
-	if err != nil {
-		return nil, err
-	}
-
 	defer file.Close()
 
 	var subjects []Subject
@@ -161,5 +131,32 @@ func (f FileDB) GetSubjects() ([]Subject, error) {
 		return nil, err
 	}
 
-	return subjects, nil
+	return &FileDB{
+		path:     path,
+		subjects: subjects,
+	}, nil
+}
+
+func (f *FileDB) AddSubject(subject Subject) error {
+
+	file, err := os.Create(f.path)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	subjects := append(f.subjects, subject)
+
+	enc := json.NewEncoder(file)
+	if err := enc.Encode(subjects); err != nil {
+		return fmt.Errorf("failed to encode subjects: %w", err)
+	}
+
+	f.subjects = subjects
+
+	return nil
+}
+
+func (f *FileDB) GetSubjects() ([]Subject, error) {
+	return f.subjects, nil
 }
