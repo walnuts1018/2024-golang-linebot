@@ -58,13 +58,13 @@ func CreateCalenderJson(subjects []Subject) (*messaging_api.FlexMessage, error) 
 			continue
 		}
 
-		text, ok := frames.Contents[subject.Weekday-1].(*messaging_api.FlexText)
+		text, ok := frames.Contents[subject.Weekday].(*messaging_api.FlexText)
 		if !ok {
 			slog.Error(fmt.Sprintf("Invalid text: %v", frames.Contents[subject.Weekday]))
 			continue
 		}
 
-		text.Text = subject.String()
+		text.Text = fmt.Sprintf("%s\n\n%s\n", subject.Name, subject.Room)
 	}
 
 	bodyContents := []messaging_api.FlexComponentInterface{
