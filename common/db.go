@@ -170,14 +170,15 @@ func (f *FileDB) AddSubject(subject Subject, userid string) error {
 		f.subjects[userid] = []Subject{}
 	}
 
-	subjects := append(f.subjects[userid], subject)
+	subjects := f.subjects
+	subjects[userid] = append(subjects[userid], subject)
 
 	enc := json.NewEncoder(file)
 	if err := enc.Encode(subjects); err != nil {
 		return fmt.Errorf("failed to encode subjects: %w", err)
 	}
 
-	f.subjects[userid] = subjects
+	f.subjects = subjects
 
 	return nil
 }
