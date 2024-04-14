@@ -21,11 +21,6 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 		return nil, err
 	}
 
-	// dbClient, err := NewDBClient(cfg)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	dbClient, err := NewFileDB("./tmp/db.json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create db client: %v", err)
