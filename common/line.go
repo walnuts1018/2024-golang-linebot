@@ -50,12 +50,11 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 					case webhook.TextMessageContent:
 						if message.Text == "カレンダー" {
 							showCalendar(c, api, e, dbClient)
+						} else {
+							addSubject(c, message, api, e, dbClient)
 						}
-
-						addSubject(c, message, api, e, dbClient)
 					}
 				}
-
 			}
 
 			c.JSON(200, gin.H{"message": "OK"})
@@ -85,7 +84,7 @@ func addSubject(c *gin.Context, message webhook.TextMessageContent, api *messagi
 	}
 
 	// エラーが発生せず、授業が正しく取り出せ、保存できた場合は、保存した授業を返信する
-	sendMessage(c, fmt.Sprintf("授業を保存しました: %v", subject), api, e)
+	sendMessage(c, fmt.Sprintf("授業を保存しました:\n %v", subject), api, e)
 
 	slog.Info(fmt.Sprintf("Replied message: %v", message.Text))
 }
