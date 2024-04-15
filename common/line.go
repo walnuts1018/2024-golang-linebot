@@ -21,6 +21,7 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
+	_ = api // unused errorを回避するため
 
 	// 今回は、データをファイルに保存します。
 	// ./tmp/db.jsonに保存されていきます。
@@ -29,6 +30,8 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create db client: %v", err)
 	}
+
+	_ = dbClient // unused errorを回避するため
 
 	// https://URL/proxy/8080 にアクセスされたときの処理を記述します。
 	proxy := r.Group("/proxy/8080")
@@ -45,6 +48,7 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 			// 送られてきたデータをパースして、メッセージを取り出します。
 			// パースとは、データを解析して、プログラムが扱いやすい形に変換することです。
 			req, err := webhook.ParseRequest(cfg.LineChannelSecret, c.Request)
+
 			// エラーが発生した場合は、エラーメッセージを返信します。
 			if err != nil {
 				slog.Error(fmt.Sprintf("Failed to parse request: %v", err))
@@ -65,12 +69,25 @@ func NewRouter(cfg config.Config) (*gin.Engine, error) {
 					switch message := e.Message.(type) {
 					// テキストメッセージの場合
 					case webhook.TextMessageContent:
+
+						sendTextMessage(c, "hello", api, e)
+
 						// 「カレンダー」というメッセージが送られた場合は、カレンダーを表示します。
 						if message.Text == "カレンダー" {
-							showCalendar(c, api, e, dbClient)
+							// -------------------------------------------------------
+							// showCalendarを呼び出しましょう
+							// -------------------------------------------------------
+							// 👇ここに処理を追加してください👇
+
+							// -------------------------------------------------------
 						} else {
 							// それ以外の場合は、授業を追加します。
-							addSubject(c, message, api, e, dbClient)
+							// -------------------------------------------------------
+							// addSubjectを呼び出しましょう
+							// -------------------------------------------------------
+							// 👇ここに処理を追加してください👇
+
+							// -------------------------------------------------------
 						}
 					}
 				}
@@ -122,21 +139,32 @@ func addSubject(c *gin.Context, message webhook.TextMessageContent, api *messagi
 
 // 「カレンダー」というメッセージが送られた場合、カレンダーを表示します。
 func showCalendar(c *gin.Context, api *messaging_api.MessagingApiAPI, e webhook.MessageEvent, dbClient Storage) {
+	var userID string
+	_ = userID
 	// UserIDを取得します。
-	userID, err := getUserID(e)
-	if err != nil {
-		slog.Error("Failed to get user id")
-		sendTextMessage(c, "ユーザーIDの取得に失敗しました", api, e)
-		return
-	}
+	// -------------------------------------------------------
+	// getUserIDを呼び出しましょう
+	//
+	// このとき、もしもエラーが発生した場合はエラーメッセージを返信してください。
+	// 例えば、sendTextMessage(c, "test", api, e)とすると、"test"というメッセージが返信されます。
+	//
+	// -------------------------------------------------------
+	// 👇ここに処理を追加してください👇
 
+	// -------------------------------------------------------
+
+	var subjects []Subject
 	// UserIDを元に、保存されている授業を取得します。
-	subjects, err := dbClient.GetSubjects(userID)
-	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to get subjects: %v", err))
-		sendTextMessage(c, fmt.Sprintf("授業の取得に失敗しました: %v", err), api, e)
-		return
-	}
+	// -------------------------------------------------------
+	// GetSubjectsを呼び出しまして、保存されている授業を取得してください。
+	//
+	// このとき、もしもエラーが発生した場合はエラーメッセージを返信してください。
+	// 例えば、sendTextMessage(c, "test", api, e)とすると、"test"というメッセージが返信されます。
+	//
+	// -------------------------------------------------------
+	// 👇ここに処理を追加してください👇
+
+	// -------------------------------------------------------
 
 	// 取得した授業を元に、時間割の形に整形したメッセージを作成します。
 	flexMessage, err := CreateCalenderJson(subjects)
@@ -164,6 +192,8 @@ func showCalendar(c *gin.Context, api *messaging_api.MessagingApiAPI, e webhook.
 }
 
 // テキストメッセージを返信します。
+// 例えば、sendTextMessage(c, "ユーザーIDの取得に失敗しました", api, e) とすると、
+// 「ユーザーIDの取得に失敗しました」と返信されます。
 func sendTextMessage(c *gin.Context, text string, api *messaging_api.MessagingApiAPI, e webhook.MessageEvent) {
 	if _, err := api.ReplyMessage(
 		&messaging_api.ReplyMessageRequest{
